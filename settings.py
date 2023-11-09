@@ -1,9 +1,10 @@
 import logging
+import os
 from os import getenv
 from dotenv import load_dotenv
 # from pymongo import MongoClient
 
-
+env_file = os.path.abspath('.env')
 load_dotenv('.env')
 
 
