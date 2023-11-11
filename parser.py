@@ -1,12 +1,10 @@
 import logging
-import sys
 import traceback
 
 import requests
 from bs4 import BeautifulSoup as bs
 
-from settings import DB_NAME
-from db import VacanciesShelve
+from mongo_db import DBManager
 
 
 class Parser:
@@ -61,10 +59,11 @@ class Parser:
                     }
 
     def generate(self):
-        try:
-            self.__found_new_vacancies()
-        except BaseException as err:
-            self.api['errors'] = self.__error_formatter(err)
+        self.__found_new_vacancies()
+        # try:
+        #     self.__found_new_vacancies()
+        # except BaseException as err:
+        #     self.api['errors'] = self.__error_formatter(err)
 
         return self.api
 
@@ -135,21 +134,21 @@ class Parser:
         :return: Новые вакансии в виде: {url: *vacancy_name*, url: *vacancy_name*, ...}
         """
 
-        db_connect = VacanciesShelve(DB_NAME)
-        last_vacancies = db_connect.read_data('hh')
+        db_connect = DBManager()
+        all_vacancies = db_connect.read_data('hh', 'all')
         new_vacancies = {}
 
         current_vacancies = self.__parse_vacancies()
 
         for vacancy_url, vacancy_name in current_vacancies.items():
-            if vacancy_url not in last_vacancies:
+            if vacancy_url not in all_vacancies:
                 new_vacancies[vacancy_url] = vacancy_name
 
         logging.info(f'Выбрали новые вакансии. Количество новых: {len(new_vacancies)}')
 
         db_connect.write_data('hh', current_vacancies)
 
-        logging.info(f'Записали текущие вакансии в db. Теперь в db вакансий: {len(db_connect.read_data("hh"))}')
+        logging.info(f'Записали текущие вакансии в db. Теперь в db вакансий: {len(db_connect.read_data("hh", "all"))}')
 
         self.api['data'] = new_vacancies
 

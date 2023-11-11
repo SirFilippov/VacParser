@@ -2,25 +2,30 @@ import logging
 import os
 from os import getenv
 from dotenv import load_dotenv
-# from pymongo import MongoClient
 
 env_file = os.path.abspath('.env')
 load_dotenv(env_file)
 
-
 TOKEN = getenv('TOKEN')
 ADMIN_ID = getenv('ADMIN_ID')
-DB_NAME = 'vacancies'
-VACANSIES_DB = 'vacansies'
-HH_DB = 'hh'
+
+VAC_BOARDS = (
+    'hh',
+)
+
+MONGO_COLLECTIONS = (
+    'all',
+    'last_requset',
+)
+
+MONGO_PORT = 27017
+MONGO_HOST = 'localhost'
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - [%(levelname)s]: %(message)s",
     encoding='utf-8',
 )
-
-# mongo_client = MongoClient("localhost", 27017)
 
 
 """

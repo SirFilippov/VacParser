@@ -12,11 +12,8 @@ from aiogram.types import (KeyboardButton,
                            Message)
 
 from parser import Parser
-from db import VacanciesShelve
-from settings import DB_NAME, TOKEN, ADMIN_ID
-
-
-
+from mongo_db import DBManager
+from settings import TOKEN, ADMIN_ID
 
 # todo Добавить кнопку статуса работы парсера
 # todo Добавить в новое сообщение дату и еще какую-нибудь информацию
@@ -49,9 +46,9 @@ async def parser_manager(message: Message == 'Start Parsing', bot) -> Any:
         PARSING_IS_ACTIVE = False
 
     elif message.text == 'Show current':
-        db_connect = VacanciesShelve(DB_NAME)
-        last_vacancies = format_vacancies(db_connect.read_data('hh'))
-        await message.answer(last_vacancies,
+        db_connect = DBManager()
+        last_request_vacancies = format_vacancies(db_connect.read_data('hh', 'all'))
+        await message.answer(last_request_vacancies,
                              reply_markup=keyboard,
                              disable_web_page_preview=True)
 
@@ -70,12 +67,11 @@ def format_vacancies(vacancies: dict) -> str:
 async def start_parser(bot) -> None:
     """
     Активация парсера hh
-    Опрос каждые 60 секунд
+    Опрос происходит раз период времени от 300 секунд до 500 (рандом)
     """
 
-    hh_parser = Parser()
-
     while PARSING_IS_ACTIVE:
+        hh_parser = Parser()
         data = hh_parser.generate()
         errors = data['errors']
         new_vacancies = data['data']
@@ -101,5 +97,5 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+    # logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     asyncio.run(main())
