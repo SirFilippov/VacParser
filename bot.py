@@ -1,7 +1,5 @@
 import asyncio
-import logging
 import random
-import sys
 from typing import Any
 
 from aiogram import Bot, Dispatcher
