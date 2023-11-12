@@ -75,7 +75,7 @@ class Parser:
         }
 
     @staticmethod
-    def __error_formatter(err_obj: BaseException):
+    def error_formatter(err_obj: BaseException):
         traceback_str = traceback.format_exc()
         traceback_str = traceback_str.split("\n")[1].strip()
         error_formatted = f'{traceback_str}: {err_obj.__str__()}'
@@ -113,14 +113,24 @@ class Parser:
                     with open('error_response.html', mode='w', encoding='utf-8') as res_file:
                         res_file.write(vacancys_soup.text)
                     logging.info(f'Пустой vacancys_soup. текст супа сохранён')
-                    self.api['errors'] = self.__error_formatter(err)
+                    self.api['errors'] = self.error_formatter(err)
                     break
 
             else:
                 self.params['page'] = str(page)
                 page_soup = self.sess.get('https://hh.ru/search/vacancy', params=self.params)
                 page_soup = bs(page_soup.text, 'lxml')
-                vacancys_soup = page_soup.find(id='a11y-main-content').find_all(class_='serp-item__title')
+                vacancys_soup = page_soup.find(id='a11y-main-content')
+
+                # Отлов ошибки временное
+                try:
+                    vacancys_soup = vacancys_soup.find_all(class_='serp-item__title')
+                except AttributeError as err:
+                    with open('error_response.html', mode='w', encoding='utf-8') as res_file:
+                        res_file.write(vacancys_soup.text)
+                    logging.info(f'Пустой vacancys_soup. текст супа сохранён')
+                    self.api['errors'] = self.error_formatter(err)
+                    break
 
             for vacancy in vacancys_soup:
                 link = vacancy['href']

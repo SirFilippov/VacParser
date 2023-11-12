@@ -45,7 +45,7 @@ async def parser_manager(message: Message == 'Start Parsing', bot) -> Any:
 
     elif message.text == 'Show current':
         db_connect = DBManager()
-        last_request_vacancies = format_vacancies(db_connect.read_data('hh', 'all'))
+        last_request_vacancies = format_vacancies(db_connect.read_data('hh', 'last_request'))
         await message.answer(last_request_vacancies,
                              reply_markup=keyboard,
                              disable_web_page_preview=True)
