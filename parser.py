@@ -104,33 +104,34 @@ class Parser:
         for page in range(page_value):
 
             if page == 0:
-                vacancys_soup = soup.find(id='a11y-main-content')
-
                 # Отлов ошибки временное
                 try:
-                    vacancys_soup = vacancys_soup.find_all(class_='serp-item__title')
+                    vacancys_soup = soup.find(id='a11y-main-content').find_all(class_='serp-item__title')
                 except AttributeError as err:
                     with open('error_response.html', mode='w', encoding='utf-8') as res_file:
-                        res_file.write(vacancys_soup.text)
-                    logging.info(f'Пустой vacancys_soup. текст супа сохранён')
+                        res_file.write(soup.text)
+                    logging.info(f'Нет элементов в soup. Текст супа сохранён')
                     self.api['errors'] = self.error_formatter(err)
                     break
+
+                vacancys_soup = soup.find_all(class_='serp-item__title')
 
             else:
                 self.params['page'] = str(page)
                 page_soup = self.sess.get('https://hh.ru/search/vacancy', params=self.params)
                 page_soup = bs(page_soup.text, 'lxml')
-                vacancys_soup = page_soup.find(id='a11y-main-content')
 
                 # Отлов ошибки временное
                 try:
-                    vacancys_soup = vacancys_soup.find_all(class_='serp-item__title')
+                    vacancys_soup = page_soup.find(id='a11y-main-content')
                 except AttributeError as err:
                     with open('error_response.html', mode='w', encoding='utf-8') as res_file:
-                        res_file.write(vacancys_soup.text)
-                    logging.info(f'Пустой vacancys_soup. текст супа сохранён')
+                        res_file.write(page_soup.text)
+                    logging.info(f'Не найдены эдементы в page_soup. текст супа сохранён')
                     self.api['errors'] = self.error_formatter(err)
                     break
+
+                vacancys_soup = vacancys_soup.find_all(class_='serp-item__title')
 
             for vacancy in vacancys_soup:
                 link = vacancy['href']
