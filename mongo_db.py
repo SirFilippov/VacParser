@@ -84,4 +84,4 @@ if __name__ == '__main__':
 
     # a.write_data('hh', data)
 
-    print(a.read_data('hh', 'all'))
+    print(a.read_data('hh', 'last_request'))

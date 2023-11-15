@@ -1,5 +1,6 @@
 import logging
 import traceback
+from datetime import datetime
 
 import requests
 from bs4 import BeautifulSoup as bs
@@ -106,11 +107,14 @@ class Parser:
             if page == 0:
                 # Отлов ошибки временное
                 try:
-                    vacancys_soup = soup.find(id='a11y-main-content').find_all(class_='serp-item__title')
+                    vacancys_soup = soup.find(id='a11y-main-content')
                 except AttributeError as err:
-                    with open('error_response.html', mode='w', encoding='utf-8') as res_file:
-                        res_file.write(soup.text)
-                    logging.info(f'Нет элементов в soup. Текст супа сохранён')
+                    with open(f'error_response_{datetime.now}.html', mode='w', encoding='utf-8') as file:
+                        file.write(response.text)
+                        print('\nHeaders:')
+                        for header, value in response.headers.items():
+                            file.write(f"{header}: {value}\n")
+                    logging.info(f'Нет элементов в soup. Текст супа сохранён.')
                     self.api['errors'] = self.error_formatter(err)
                     break
 
@@ -118,16 +122,19 @@ class Parser:
 
             else:
                 self.params['page'] = str(page)
-                page_soup = self.sess.get('https://hh.ru/search/vacancy', params=self.params)
-                page_soup = bs(page_soup.text, 'lxml')
+                page_response = self.sess.get('https://hh.ru/search/vacancy', params=self.params)
+                page_soup = bs(page_response.text, 'lxml')
 
                 # Отлов ошибки временное
                 try:
                     vacancys_soup = page_soup.find(id='a11y-main-content')
                 except AttributeError as err:
-                    with open('error_response.html', mode='w', encoding='utf-8') as res_file:
-                        res_file.write(page_soup.text)
-                    logging.info(f'Не найдены эдементы в page_soup. текст супа сохранён')
+                    with open(f'error_response_{datetime.now}.html', mode='w', encoding='utf-8') as file:
+                        file.write(page_response.text)
+                        print('\nHeaders:')
+                        for header, value in page_response.headers.items():
+                            file.write(f"{header}: {value}\n")
+                    logging.info(f'Нет элементов в page_soup. Текст супа сохранён.')
                     self.api['errors'] = self.error_formatter(err)
                     break
 

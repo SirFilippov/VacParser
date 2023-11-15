@@ -15,7 +15,7 @@ VAC_BOARDS = (
 
 MONGO_COLLECTIONS = (
     'all',
-    'last_requset',
+    'last_request',
 )
 
 MONGO_PORT = 27017
