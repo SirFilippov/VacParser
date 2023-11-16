@@ -107,7 +107,7 @@ class Parser:
             if page == 0:
                 # Отлов ошибки временное
                 try:
-                    vacancys_soup = soup.find(id='a11y-main-content')
+                    vacancys_soup = soup.find(id='a11y-main-content').find_all(class_='serp-item__title')
                 except AttributeError as err:
                     with open(f'error_response_{datetime.now}.html', mode='w', encoding='utf-8') as file:
                         file.write(response.text)
@@ -118,8 +118,6 @@ class Parser:
                     self.api['errors'] = self.error_formatter(err)
                     break
 
-                vacancys_soup = soup.find_all(class_='serp-item__title')
-
             else:
                 self.params['page'] = str(page)
                 page_response = self.sess.get('https://hh.ru/search/vacancy', params=self.params)
@@ -127,7 +125,7 @@ class Parser:
 
                 # Отлов ошибки временное
                 try:
-                    vacancys_soup = page_soup.find(id='a11y-main-content')
+                    vacancys_soup = page_soup.find(id='a11y-main-content').find_all(class_='serp-item__title')
                 except AttributeError as err:
                     with open(f'error_response_{datetime.now}.html', mode='w', encoding='utf-8') as file:
                         file.write(page_response.text)
@@ -137,8 +135,6 @@ class Parser:
                     logging.info(f'Нет элементов в page_soup. Текст супа сохранён.')
                     self.api['errors'] = self.error_formatter(err)
                     break
-
-                vacancys_soup = vacancys_soup.find_all(class_='serp-item__title')
 
             for vacancy in vacancys_soup:
                 link = vacancy['href']
