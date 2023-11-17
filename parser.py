@@ -1,7 +1,11 @@
+import copy
 import logging
+import time
 import traceback
 from datetime import datetime
+import os
 
+import bs4
 import requests
 from bs4 import BeautifulSoup as bs
 
@@ -40,7 +44,7 @@ class Parser:
         ],
         'schedule': 'remote',
         'professional_role': '96',
-        'saved_search_id': '69129685',
+        # 'saved_search_id': '69129685',
         'no_magic': 'true',
         'ored_clusters': 'true',
         'items_on_page': '20',
@@ -62,18 +66,7 @@ class Parser:
 
     def generate(self):
         self.__found_new_vacancies()
-        # try:
-        #     self.__found_new_vacancies()
-        # except BaseException as err:
-        #     self.api['errors'] = self.__error_formatter(err)
-
         return self.api
-
-    def clear_cache(self):
-        self.api = {
-            'data': {},
-            'errors': '',
-        }
 
     @staticmethod
     def error_formatter(err_obj: BaseException):
@@ -81,6 +74,28 @@ class Parser:
         traceback_str = traceback_str.split("\n")[1].strip()
         error_formatted = f'{traceback_str}: {err_obj.__str__()}'
         return error_formatted
+
+    def __vacansys_founder(self, soup: bs4.BeautifulSoup, response: requests.Response) -> list:
+        try:
+            vacancys_soups = soup.find(id='a11y-main-content').find_all(class_='serp-item__title')
+            return vacancys_soups
+        except AttributeError as err:
+            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+            if not os.path.exists('errors'):
+                os.makedirs('errors')
+
+            with open(f'./errors/response_{now}.html', mode='w', encoding='utf-8') as file:
+                file.write(response.text)
+                print('\nHeaders:')
+                for header, value in response.headers.items():
+                    file.write(f"{header}: {value}\n")
+
+            logging.info(f'Нет элементов в soup. Текст супа сохранён. Повторная попытка.')
+            self.api['errors'] = self.error_formatter(err)
+
+            time.sleep(5)
+            self.__vacansys_founder(soup, response)
 
     def __parse_vacancies(self) -> dict:
         """
@@ -90,7 +105,7 @@ class Parser:
 
         vacancys_data = {}
         response = self.sess.get('https://hh.ru/search/vacancy', params=self.params)
-        soup = bs(response.text, 'lxml')
+        soup = bs(response.text[:3], 'lxml')
 
         # Ищем количество страниц с вакансиями
         page_value = soup.find(class_='pager')
@@ -103,45 +118,18 @@ class Parser:
 
         # Парсим названия и линки на вакансии
         for page in range(page_value):
-
             if page == 0:
-                # Отлов ошибки временное
-                try:
-                    vacancys_soup = soup.find(id='a11y-main-content').find_all(class_='serp-item__title')
-                except AttributeError as err:
-                    with open(f'error_response_{datetime.now}.html', mode='w', encoding='utf-8') as file:
-                        file.write(response.text)
-                        print('\nHeaders:')
-                        for header, value in response.headers.items():
-                            file.write(f"{header}: {value}\n")
-                    logging.info(f'Нет элементов в soup. Текст супа сохранён.')
-                    self.api['errors'] = self.error_formatter(err)
-                    break
-
+                vacancys_soup = self.__vacansys_founder(soup, response)
             else:
-                self.params['page'] = str(page)
-                page_response = self.sess.get('https://hh.ru/search/vacancy', params=self.params)
+                params = copy.copy(self.params)
+                params['page'] = page
+                page_response = self.sess.get('https://hh.ru/search/vacancy', params=params)
                 page_soup = bs(page_response.text, 'lxml')
-
-                # Отлов ошибки временное
-                try:
-                    vacancys_soup = page_soup.find(id='a11y-main-content').find_all(class_='serp-item__title')
-                except AttributeError as err:
-                    with open(f'error_response_{datetime.now}.html', mode='w', encoding='utf-8') as file:
-                        file.write(page_response.text)
-                        print('\nHeaders:')
-                        for header, value in page_response.headers.items():
-                            file.write(f"{header}: {value}\n")
-                    logging.info(f'Нет элементов в page_soup. Текст супа сохранён.')
-                    self.api['errors'] = self.error_formatter(err)
-                    break
+                vacancys_soup = self.__vacansys_founder(page_soup, page_response)
 
             for vacancy in vacancys_soup:
                 link = vacancy['href']
-                name = vacancy.text
-                vacancys_data[link] = name
-
-        self.params['page'] = '0'
+                vacancys_data[link] = vacancy.text
 
         logging.info(f'Собрали вакансии. Количество страниц: {page_value} Количество вакансий: {len(vacancys_data)}')
 
@@ -174,6 +162,8 @@ class Parser:
 
 
 if __name__ == '__main__':
-    hh_parser = Parser()
-    hh_parser.generate()
-    print(hh_parser.api['data'])
+    while True:
+        hh_parser = Parser()
+        hh_parser.generate()
+        # print(hh_parser.api['data'])
+        time.sleep(5)

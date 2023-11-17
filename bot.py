@@ -84,7 +84,6 @@ async def start_parser(bot) -> None:
                                    msg,
                                    disable_web_page_preview=True)
 
-        hh_parser.clear_cache()
         await asyncio.sleep(random.randint(300, 500))
 
 
