@@ -105,7 +105,7 @@ class Parser:
 
         vacancys_data = {}
         response = self.sess.get('https://hh.ru/search/vacancy', params=self.params)
-        soup = bs(response.text[:3], 'lxml')
+        soup = bs(response.text, 'lxml')
 
         # Ищем количество страниц с вакансиями
         page_value = soup.find(class_='pager')
