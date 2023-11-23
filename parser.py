@@ -5,7 +5,6 @@ import traceback
 from datetime import datetime
 import os
 
-import bs4
 import requests
 from bs4 import BeautifulSoup as bs
 
@@ -57,53 +56,67 @@ class Parser:
     }
 
     def __init__(self):
-        self.sess = requests.Session()
-        self.sess.headers.update(self.headers)
+        # self.sess = requests.Session()
+        # self.sess.headers.update(self.headers)
         self.api = {
             'data': {},
             'errors': '',
-                    }
+        }
+        self.parser_is_on = False
 
     def generate(self):
         self.__found_new_vacancies()
         return self.api
 
     @staticmethod
-    def error_formatter(err_obj: BaseException):
-        traceback_str = traceback.format_exc()
-        traceback_str = traceback_str.split("\n")[1].strip()
-        error_formatted = f'{traceback_str}: {err_obj.__str__()}'
+    def error_formatter(err_obj: BaseException | str):
+        if isinstance(err_obj, BaseException):
+            traceback_str = traceback.format_exc()
+            traceback_str = traceback_str.split("\n")[1].strip()
+            error_formatted = f'{traceback_str}: {err_obj.__str__()}'
+        elif isinstance(err_obj, str):
+            error_formatted = err_obj
+        else:
+            raise AttributeError('Неизвестный формат ошибки')
         return error_formatted
 
-    def __vacansys_founder(self, soup: bs4.BeautifulSoup, response: requests.Response) -> list:
-        try:
-            vacancys_soups = soup.find(id='a11y-main-content').find_all(class_='serp-item__title')
-            return vacancys_soups
-        except AttributeError as err:
-            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    def __vacansys_founder(self, soup: bs, response: requests.Response) -> list:
+        count = 0
 
-            if not os.path.exists('errors'):
-                os.makedirs('errors')
+        while count != 5:
+            try:
+                vacancies_soups = soup.find(id='a11y-main-content').find_all(class_='serp-item__title')
+                return vacancies_soups
+            except AttributeError:
+                now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-            with open(f'./errors/response_{now}.html', mode='w', encoding='utf-8') as file:
-                file.write(response.text)
-                print('\nHeaders:')
-                for header, value in response.headers.items():
-                    file.write(f"{header}: {value}\n")
+                if not os.path.exists('errors'):
+                    os.makedirs('errors')
 
-            logging.info(f'Нет элементов в soup. Текст супа сохранён. Повторная попытка.')
-            self.api['errors'] = self.error_formatter(err)
+                with open(f'./errors/response_{now}.html', mode='w', encoding='utf-8') as file:
+                    file.write(response.text)
 
-            time.sleep(5)
-            self.__vacansys_founder(soup, response)
+                with open(f'./errors/headers_{now}.html', mode='w', encoding='utf-8') as file:
+                    file.write(f'Headers:\n')
+                    for header, value in response.headers.items():
+                        file.write(f"{header}: {value}\n")
+
+                logging.info(f'Плохой soup. Повторная попытка через 5 секунд.')
+
+                time.sleep(5)
+                count += 1
+
+        self.api['errors'] = self.error_formatter('Нет ответа от сайта')
 
     def __parse_vacancies(self) -> dict:
         """
         Парсит текущие вакансии по заданному фильтру
         :return: Возвращает словарь в виде: {url: *vacancy_name*, url: *vacancy_name*, ...}
         """
-
         vacancys_data = {}
+
+        self.sess = requests.Session()
+        self.sess.headers.update(self.headers)
         response = self.sess.get('https://hh.ru/search/vacancy', params=self.params)
         soup = bs(response.text, 'lxml')
 
@@ -164,6 +177,10 @@ class Parser:
 if __name__ == '__main__':
     while True:
         hh_parser = Parser()
-        hh_parser.generate()
+        try:
+            a = 2 / 0
+        except BaseException as err:
+            print(hh_parser.error_formatter(err))
+
         # print(hh_parser.api['data'])
         time.sleep(5)
