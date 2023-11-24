@@ -17,7 +17,6 @@ MONGO_COLLECTIONS = (
     'all',
     'last_request',
 )
-
 MONGO_PORT = 27017
 MONGO_HOST = 'localhost'
 
@@ -29,5 +28,5 @@ logging.basicConfig(
 
 
 """
-https://samara.hh.ru/search/vacancy?text=Python+junior&items_on_page=20&employment=probation&employment=part&employment=full&employment=project&employment=volunteer&schedule=remote&area=113&professional_role=96&search_field=name&search_field=description&saved_search_id=69129685&no_magic=true&L_is_autosearch=true
+https://hh.ru/search/vacancy?text=Python+junior&items_on_page=20&employment=probation&employment=part&employment=full&employment=project&employment=volunteer&schedule=remote&area=113&professional_role=96&search_field=name&search_field=description&saved_search_id=69129685&no_magic=true&L_is_autosearch=true
 """

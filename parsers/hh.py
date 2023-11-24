@@ -43,7 +43,6 @@ class Parser:
         ],
         'schedule': 'remote',
         'professional_role': '96',
-        # 'saved_search_id': '69129685',
         'no_magic': 'true',
         'ored_clusters': 'true',
         'items_on_page': '20',
@@ -56,13 +55,11 @@ class Parser:
     }
 
     def __init__(self):
-        # self.sess = requests.Session()
-        # self.sess.headers.update(self.headers)
         self.api = {
+            'name': 'hh',
             'data': {},
             'errors': '',
         }
-        self.parser_is_on = False
 
     def generate(self):
         self.__found_new_vacancies()
@@ -80,7 +77,7 @@ class Parser:
             raise AttributeError('Неизвестный формат ошибки')
         return error_formatted
 
-    def __vacansys_founder(self, soup: bs, response: requests.Response) -> list:
+    def __vacansies_founder(self, soup: bs, response: requests.Response) -> list:
         count = 0
 
         while count != 5:
@@ -101,7 +98,7 @@ class Parser:
                     for header, value in response.headers.items():
                         file.write(f"{header}: {value}\n")
 
-                logging.info(f'Плохой soup. Повторная попытка через 5 секунд.')
+                logging.info(f'Плохой soup. Попытка # {count + 1} через 5 секунд.')
 
                 time.sleep(5)
                 count += 1
@@ -113,7 +110,7 @@ class Parser:
         Парсит текущие вакансии по заданному фильтру
         :return: Возвращает словарь в виде: {url: *vacancy_name*, url: *vacancy_name*, ...}
         """
-        vacancys_data = {}
+        vacancies_data = {}
 
         self.sess = requests.Session()
         self.sess.headers.update(self.headers)
@@ -132,21 +129,21 @@ class Parser:
         # Парсим названия и линки на вакансии
         for page in range(page_value):
             if page == 0:
-                vacancys_soup = self.__vacansys_founder(soup, response)
+                vacancys_soup = self.__vacansies_founder(soup, response)
             else:
                 params = copy.copy(self.params)
                 params['page'] = page
                 page_response = self.sess.get('https://hh.ru/search/vacancy', params=params)
                 page_soup = bs(page_response.text, 'lxml')
-                vacancys_soup = self.__vacansys_founder(page_soup, page_response)
+                vacancys_soup = self.__vacansies_founder(page_soup, page_response)
 
             for vacancy in vacancys_soup:
                 link = vacancy['href']
-                vacancys_data[link] = vacancy.text
+                vacancies_data[link] = vacancy.text
 
-        logging.info(f'Собрали вакансии. Количество страниц: {page_value} Количество вакансий: {len(vacancys_data)}')
+        logging.info(f'Собрали вакансии. Количество страниц: {page_value} Количество вакансий: {len(vacancies_data)}')
 
-        return vacancys_data
+        return vacancies_data
 
     def __found_new_vacancies(self) -> None:
         """
