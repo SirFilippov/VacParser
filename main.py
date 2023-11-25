@@ -48,7 +48,7 @@ async def start_parser(msg: Message) -> None:
 
         if errors or new_vacancies:
             if new_vacancies:
-                msg = format_vacancies(new_vacancies)
+                msg = await format_vacancies(new_vacancies)
             else:
                 msg = errors
 
