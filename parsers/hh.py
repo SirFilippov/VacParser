@@ -104,6 +104,7 @@ class Parser:
                 count += 1
 
         self.api['errors'] = self.error_formatter('Нет ответа от сайта')
+        return []
 
     def __parse_vacancies(self) -> dict:
         """
