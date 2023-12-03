@@ -17,7 +17,7 @@ class Manager:
             parser_data = parser.generate()
             api['data'].update(parser_data['data'])
             if parser_data['errors']:
-                errors = f'{parser_data["name"]}: {parser_data["name"]}'
+                errors = f'{parser_data["name"]}: {parser_data["errors"]}'
                 api['errors'].append(errors)
 
         api['errors'] = '\n'.join(api['errors'])

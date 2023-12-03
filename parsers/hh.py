@@ -32,8 +32,8 @@ class Parser:
     }
 
     params = {
-        'text': 'Python junior',
-        'salary': '',
+        'text': 'Python junior',  # Ключевые слова
+        'salary': '',  # Желаемая зп
         'employment': [
             'probation',
             'part',
@@ -85,25 +85,25 @@ class Parser:
                 vacancies_soups = soup.find(id='a11y-main-content').find_all(class_='serp-item__title')
                 return vacancies_soups
             except AttributeError:
-                now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-                if not os.path.exists('errors'):
-                    os.makedirs('errors')
-
-                with open(f'./errors/response_{now}.html', mode='w', encoding='utf-8') as file:
-                    file.write(response.text)
-
-                with open(f'./errors/headers_{now}.html', mode='w', encoding='utf-8') as file:
-                    file.write(f'Headers:\n')
-                    for header, value in response.headers.items():
-                        file.write(f"{header}: {value}\n")
+                # now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                #
+                # if not os.path.exists('errors'):
+                #     os.makedirs('errors')
+                #
+                # with open(f'./errors/response_{now}.html', mode='w', encoding='utf-8') as file:
+                #     file.write(response.text)
+                #
+                # with open(f'./errors/headers_{now}.html', mode='w', encoding='utf-8') as file:
+                #     file.write(f'Headers:\n')
+                #     for header, value in response.headers.items():
+                #         file.write(f"{header}: {value}\n")
 
                 logging.info(f'Плохой soup. Попытка # {count + 1} через 5 секунд.')
 
-                time.sleep(5)
+                time.sleep(3)
                 count += 1
 
-        self.api['errors'] = self.error_formatter('Нет ответа от сайта')
+        # self.api['errors'] = self.error_formatter('Нет ответа от сайта')
         return []
 
     def __parse_vacancies(self) -> dict:

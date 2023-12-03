@@ -43,11 +43,17 @@ class DBManager:
 
         collection = self.client[db][request_type]
         vacancies = collection.find()
+        vacancies = sorted(vacancies, key=lambda x: x['add_datetime'], reverse=True)
         vacancies = {vac['url']: vac['name'] for vac in vacancies}
         return vacancies
 
     def __add_vacancies(self, db: str, data_to_add: dict) -> None:
-        """Распределяет словарь последних взятых вакансий в вакансии с последнего запроса и во все вакансии
+        """Распределяет словарь последних взятых вакансий на две таблицы:
+        - вакансии с последнего запроса
+        - все вакансии
+
+        При этом если во "всех" вакансиях есть вакансии "с последнего запроса", дата появления берется именно с
+        даты во "всех" вакансиях для последующей сортировки по дате появления в бд
 
         :parameter db: str, наименование площадки сбора ваканский
         :parameter data_to_add: dict, вакансии в формате {url: наимменование, ...}
@@ -71,9 +77,13 @@ class DBManager:
                 'add_datetime': datetime.now(),
             }
 
-            last_request_collection.insert_one(new_vac)
+            vac_is_exist = all_collection.find_one(querry)
 
-            if all_collection.find_one(querry) is None:
+            if vac_is_exist:
+                new_vac['add_datetime'] = vac_is_exist['add_datetime']
+                last_request_collection.insert_one(new_vac)
+            else:
+                last_request_collection.insert_one(new_vac)
                 all_collection.insert_one(new_vac)
 
 
