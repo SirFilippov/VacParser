@@ -78,6 +78,11 @@ async def parser_manager(message: Message) -> None:
     await message.answer(f'Парсер остановлен pars_is_on={pars_is_on}')
 
 
+@router.message(F.text == "Check Parser")
+async def parser_manager(message: Message) -> None:
+    await message.answer(f'Статус парсера pars_is_on={pars_is_on}')
+
+
 @router.message(F.text == "Show Current")
 async def parser_manager(message: Message) -> None:
     db_connect = DBManager()
